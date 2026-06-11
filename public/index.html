@@ -466,7 +466,7 @@
             placeholder="例如：明天下午3点到5点金沙滩，5个人，我叫小张"
             onkeydown="if(event.key==='Enter') parseBooking()">
           <button class="btn btn-primary" id="parseBtn" onclick="parseBooking()">
-            解析预定
+            预定
           </button>
         </div>
         <div class="examples">
@@ -639,7 +639,7 @@
       
       const btn = document.getElementById('parseBtn');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> 解析中...';
+      btn.innerHTML = '<span class="spinner"></span> 预定中...';
       document.getElementById('previewCard').classList.remove('visible');
       document.getElementById('previewError').style.display = 'none';
       
@@ -685,7 +685,7 @@
         showPreviewError('网络错误，请重试');
       } finally {
         btn.disabled = false;
-        btn.textContent = '解析预定';
+        btn.textContent = '预定';
       }
     }
     
