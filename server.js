@@ -94,8 +94,8 @@ app.post('/api/bookings', async (req, res) => {
   try {
     const { roomId, bookerName, date, startTime, endTime, peopleCount, purpose } = req.body;
 
-    // Validate required fields
-    if (!roomId || !bookerName || !date || !startTime || !endTime || !peopleCount) {
+    // Validate required fields (peopleCount is optional)
+    if (!roomId || !bookerName || !date || !startTime || !endTime) {
       return res.status(400).json({ error: '缺少必要参数' });
     }
 
@@ -123,12 +123,13 @@ app.post('/api/bookings', async (req, res) => {
       return res.status(400).json({ error: '最多可以提前7天预定' });
     }
 
-    // Check capacity
+    // Get room info & default peopleCount to room capacity
     const [rooms] = await pool.query('SELECT capacity, name FROM rooms WHERE id = ?', [roomId]);
     if (rooms.length === 0) {
       return res.status(400).json({ error: '会议室不存在' });
     }
-    if (peopleCount > rooms[0].capacity) {
+    const effectivePeopleCount = peopleCount || rooms[0].capacity;
+    if (peopleCount && peopleCount > rooms[0].capacity) {
       return res.status(400).json({ error: `${rooms[0].name}最多容纳${rooms[0].capacity}人，您预定${peopleCount}人超出限制` });
     }
 
@@ -150,7 +151,7 @@ app.post('/api/bookings', async (req, res) => {
     const [result] = await pool.query(
       `INSERT INTO bookings (room_id, booker_name, booking_date, start_time, end_time, people_count, purpose) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [roomId, bookerName, date, startTime, endTime, peopleCount, purpose || '会议']
+      [roomId, bookerName, date, startTime, endTime, effectivePeopleCount, purpose || '会议']
     );
 
     res.json({
