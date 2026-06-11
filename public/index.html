@@ -692,9 +692,9 @@
     function showPreview(data) {
       document.getElementById('pvRoom').textContent = '🏖️ ' + data.roomName;
       document.getElementById('pvDate').textContent = formatDateCN(data.date) + ' (' + formatWeekday(data.date) + ')';
-      document.getElementById('pvTime').textContent = data.startTime.slice(0,5) + ' 至 ' + data.endTime.slice(0,5) + 
-        '（' + calcDuration(data.startTime, data.endTime) + '分钟）';
-      document.getElementById('pvPeople').textContent = data.peopleCount + '人';
+      document.getElementById('pvTime').textContent = (data.startTime ? (data.startTime.slice(0,5) + ' 至 ' + data.endTime.slice(0,5)) : '未指定') + 
+        (data.startTime ? '（' + calcDuration(data.startTime, data.endTime) + '分钟）' : '');
+      document.getElementById('pvPeople').textContent = data.peopleCount ? data.peopleCount + '人' : '未指定';
       document.getElementById('pvPurpose').textContent = data.purpose || '会议';
       
       const nameEl = document.getElementById('pvName');
