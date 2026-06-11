@@ -658,8 +658,12 @@
         
         // Map room name to room ID
         let roomId, roomName;
-        if (data.room === '金沙滩') { roomId = 1; roomName = '金沙滩'; }
-        else if (data.room === '银沙滩') { roomId = 2; roomName = '银沙滩'; }
+        if (data.room === '金沙滩' || data.room === '金沙') { roomId = 1; roomName = '金沙滩'; }
+        else if (data.room === '银沙滩' || data.room === '银沙') { roomId = 2; roomName = '银沙滩'; }
+        if (!roomId) {
+          showPreviewError('未识别到会议室，请明确指定金沙滩或银沙滩');
+          return;
+        }
         
         // Check availability
         const availRes = await fetch('/api/check-availability?' + new URLSearchParams({
