@@ -774,11 +774,20 @@
           })
         });
         
+        if (!res.ok) {
+          const errorText = await res.text();
+          showToast('❌ 服务器错误: ' + res.status, 'error');
+          console.error('Booking error:', res.status, errorText);
+          throw new Error('HTTP ' + res.status);
+        }
+        
         const data = await res.json();
         
         if (data.success) {
-          showToast('🎉 ' + currentParseResult.roomName + ' ' + 
-            currentParseResult.startTime.slice(0,5) + '-' + currentParseResult.endTime.slice(0,5) + ' 预定成功！');
+          const timeStr = currentParseResult.startTime 
+            ? currentParseResult.startTime.slice(0,5) + '-' + currentParseResult.endTime.slice(0,5)
+            : '';
+          showToast('🎉 ' + currentParseResult.roomName + ' ' + timeStr + ' 预定成功！');
           resetForm();
           loadBookings();
           selectDate(currentParseResult.date);
@@ -786,7 +795,8 @@
           showToast('❌ ' + (data.error || '预定失败'), 'error');
         }
       } catch (err) {
-        showToast('❌ 网络错误，请重试', 'error');
+        showToast('❌ 网络错误: ' + err.message, 'error');
+        console.error('Booking fetch error:', err);
       } finally {
         btn.disabled = false;
         btn.innerHTML = '✅ 确认预定';
