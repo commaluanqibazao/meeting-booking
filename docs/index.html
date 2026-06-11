@@ -187,11 +187,7 @@
     </header>
     
     <div class="main-card">
-      <div class="setup-banner" id="setupBanner">
-        <span>⚠️ 后端地址未配置</span>
-        <input type="text" id="apiUrlInput" placeholder="http://1.14.77.3:3000" value="">
-        <button class="btn btn-primary btn-sm" onclick="saveApiUrl()">保存</button>
-      </div>
+      <!-- API served via nginx from the same server -->
 
       <div class="rooms-badge">
         <div class="room-badge">🏖️ 金沙滩 <span class="capacity">· 10人</span></div>
@@ -204,7 +200,7 @@
           <input type="text" id="nlpInput" 
             placeholder="例如：明天下午3点到5点金沙滩，5个人，我叫小张"
             onkeydown="if(event.key==='Enter') parseBooking()">
-          <button class="btn btn-primary" id="parseBtn" onclick="parseBooking()">解析预定</button>
+          <button class="btn btn-primary" id="parseBtn" onclick="parseBooking()">预定</button>
         </div>
         <div class="examples">
           <span class="example-tag" onclick="fillExample(this)">明天下午3点到5点金沙滩，5个人，我叫小张</span>
@@ -280,49 +276,8 @@
 
   <script>
     // ============ API Configuration ============
-    // Auto-detect API base URL
-    function getApiBase() {
-      // Check localStorage for user-configured URL
-      const saved = localStorage.getItem('booking_api_url');
-      if (saved) return saved.replace(/\/+$/, '');
-      
-      // On same origin (localhost / direct server access), use relative path
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return '';
-      }
-      
-      // Check if we're on GitHub Pages or a custom domain
-      // Default fallback - user needs to configure
-      return '';
-    }
-    
-    let API_BASE = getApiBase();
-    
-    function showSetupBanner() {
-      const banner = document.getElementById('setupBanner');
-      if (!API_BASE) {
-        banner.classList.add('show');
-        document.getElementById('apiUrlInput').value = localStorage.getItem('booking_api_url') || '';
-      } else {
-        banner.classList.remove('show');
-      }
-    }
-    
-    function saveApiUrl() {
-      const url = document.getElementById('apiUrlInput').value.trim();
-      if (!url) {
-        showToast('请输入后端地址', 'error');
-        return;
-      }
-      localStorage.setItem('booking_api_url', url.replace(/\/+$/, ''));
-      API_BASE = url.replace(/\/+$/, '');
-      document.getElementById('setupBanner').classList.remove('show');
-      showToast('✅ 地址已保存，开始使用吧！');
-      loadAllData();
-    }
-    
-    // ============ Helpers ============
-    function api(url) { return API_BASE + url; }
+    // API is served from same server via nginx reverse proxy
+    function api(url) { return url; }
     function getTodayStr() {
       const d = new Date();
       return d.getFullYear() + '-' + 
@@ -351,14 +306,8 @@
     // ============ Init ============
     document.addEventListener('DOMContentLoaded', () => {
       initDateNav();
-      showSetupBanner();
-      loadAllData();
-    });
-    
-    function loadAllData() {
       loadBookings();
-      // Load tab-all only when switching
-    }
+    });
     
     function initDateNav() {
       const container = document.getElementById('dayBtns');
@@ -408,18 +357,13 @@
     }
     
     async function parseBooking() {
-      if (!API_BASE) {
-        showToast('请先配置后端地址', 'error');
-        document.getElementById('setupBanner').classList.add('show');
-        return;
-      }
       
       const text = document.getElementById('nlpInput').value.trim();
       if (!text) { showToast('请输入预定内容', 'error'); return; }
       
       const btn = document.getElementById('parseBtn');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> 解析中...';
+      btn.innerHTML = '<span class="spinner"></span> 预定中...';
       document.getElementById('previewCard').classList.remove('visible');
       document.getElementById('previewError').style.display = 'none';
       
@@ -453,7 +397,7 @@
         showPreviewError('网络错误：' + (err.message || '请检查后端地址配置'));
       } finally {
         btn.disabled = false;
-        btn.textContent = '解析预定';
+        btn.textContent = '预定';
       }
     }
     
@@ -551,7 +495,6 @@
     async function loadBookings() {
       const container = document.getElementById('scheduleList');
       container.innerHTML = '<div class="booking-card"><div class="empty-msg">⏳ 加载中...</div></div>';
-      if (!API_BASE) return;
       
       try {
         const res = await fetch(api('/api/bookings?date=' + selectedDate));
@@ -579,7 +522,6 @@
     async function loadAllBookings() {
       const container = document.getElementById('allBookingsList');
       container.innerHTML = '<div class="booking-card"><div class="empty-msg">⏳ 加载中...</div></div>';
-      if (!API_BASE) return;
       
       try {
         const res = await fetch(api('/api/bookings'));
