@@ -792,9 +792,10 @@
             ? currentParseResult.startTime.slice(0,5) + '-' + currentParseResult.endTime.slice(0,5)
             : '';
           showToast('🎉 ' + currentParseResult.roomName + ' ' + timeStr + ' 预定成功！');
+          var savedDate = currentParseResult.date;
           resetForm();
           loadBookings();
-          selectDate(currentParseResult.date);
+          selectDate(savedDate);
         } else {
           showToast('❌ ' + (data.error || '预定失败'), 'error');
         }
