@@ -74,7 +74,7 @@ app.get('/api/check-availability', async (req, res) => {
          AND booking_date = ? 
          AND start_time < ? 
          AND end_time > ?`,
-      [parseInt(roomId), date, endTime, startTime]
+      [parseInt(roomId) || 0, date, endTime, startTime]
     );
 
     res.json({
