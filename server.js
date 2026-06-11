@@ -47,13 +47,13 @@ app.get('/api/rooms', async (req, res) => {
 });
 
 // Parse natural language booking text
-app.post('/api/parse', (req, res) => {
+app.post('/api/parse', async (req, res) => {
   const { text } = req.body;
   if (!text) {
     return res.status(400).json({ error: '请输入预定内容' });
   }
   
-  const result = parseBookingText(text);
+  const result = await parseBookingText(text);
   res.json(result);
 });
 
