@@ -34,26 +34,28 @@ async function parseBookingText(text) {
 
 从用户的自然语言输入中提取以下信息（JSON格式）：
 {
-  "room": "金沙滩 或 银沙滩",
-  "date": "YYYY-MM-DD格式的日期",
-  "startTime": "HH:MM格式的开始时间",
-  "endTime": "HH:MM格式的结束时间",
-  "peopleCount": "人数（数字）",
-  "bookerName": "预定人姓名，如果提到了的话",
-  "purpose": "会议事由或目的"
+  "room": "金沙滩 或 银沙滩，如果用户没指定则设为null",
+  "date": "YYYY-MM-DD格式的日期，如果用户没指定则设为null（默认今天）",
+  "startTime": "HH:MM格式的开始时间，如果用户没指定则设为null",
+  "endTime": "HH:MM格式的结束时间，如果用户没指定则设为null",
+  "peopleCount": "人数（数字），如果用户没提到则设为null",
+  "bookerName": "预定人姓名，如果没提到则设为null",
+  "purpose": "会议事由或目的，如果没提到则设为null"
 }
 
 注意：
 - 日期描述如"今天""明天""后天""周X""下周一""X月X号"等要正确换算成YYYY-MM-DD
 - 时间描述如"下午3点"要换算成15:00，"上午10点半"换算成10:30
-- 如果用户只说了"X点到Y点"而没有上午/下午，根据常识判断（如3点一般是下午15点）
-- "帮我预定""帮我订"等只是请求预定，不是预定人姓名
+- 如果用户只说了"X点到Y点"而没有上午/下午，根据常识判断（如3点一般是下午15点，10点一般是上午10点）
+- 如果用户说了"晚上"但时间在0-6点，应该是凌晨/深夜；如果18-23点才正常
+- "帮我预定""帮我订""预定""预约"等都是请求预定动作，不是会议事由，也不提取为预定人
 - 如果用户没有明确说名字，bookerName设为null
-- 如果用户没有说事由，purpose设为"会议"
-- 验证人数不超过会议室容量
-- 验证时长不超过4小时
-- 验证日期不超过7天后
-- 如果信息不完整或有问题，在error字段说明问题
+- 如果用户没有说事由，purpose设为null（后端会默认"会议"）
+- 如果用户没提人数，peopleCount设为null
+- 不验证人数，不验证容量，不验证时长，不验证日期范围——这些交给后端做
+- 如果用户信息严重不完整导致无法理解，在error字段说明问题
+- 对于"金沙滩"的变体（金沙、金）也要识别出来，银沙滩类似
+- "9楼""九楼"等只是楼层信息，不是会议室名
 
 只返回JSON，不要其他文字。`;
 
@@ -84,7 +86,7 @@ async function parseBookingText(text) {
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
     
-    // Parse JSON from response (handle cases where it might be wrapped in markdown code blocks)
+    // Parse JSON from response (handle code blocks)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
@@ -97,6 +99,9 @@ async function parseBookingText(text) {
     if (result.error) {
       return { error: result.error };
     }
+    
+    // Set defaults for null fields
+    if (!result.date) result.date = todayStr;
     
     // Format times
     if (result.startTime) {
