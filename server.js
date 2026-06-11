@@ -16,8 +16,22 @@ const pool = mysql.createPool({
   charset: 'utf8mb4'
 });
 
+// CORS - allow GitHub Pages to call API
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || corsOrigins.length === 0 || corsOrigins.includes(origin) || corsOrigins.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json());
 app.use(express.static('public'));
+app.use(express.static('docs'));
 
 // ============ API Routes ============
 
